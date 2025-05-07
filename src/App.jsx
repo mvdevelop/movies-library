@@ -1,9 +1,10 @@
+
 import React from "react";
 
 import "./App.css";
-import Fire from "./assets/fire.png";
-import Star from "./assets/glowing-star.png";
-import Party from "./assets/partying-face.png";
+import Fire from "./assets/fire-gif.gif";
+import Star from "./assets/star-gif.gif";
+import Party from "./assets/happy-gif.gif";
 import Navbar from "./components/Navbar/Navbar";
 import MovieList from "./components/MovieList/MovieList";
 

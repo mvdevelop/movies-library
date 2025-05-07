@@ -1,7 +1,8 @@
+
 import React from "react";
 
 import "./MovieCard.css";
-import Star from "../../assets/star.png";
+import Star from "../../assets/star-gif.gif";
 
 const MovieCard = ({ movie }) => {
     return (

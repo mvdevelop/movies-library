@@ -1,3 +1,4 @@
+
 import React from "react";
 
 const FilterGroup = ({ minRating, onRatingClick, ratings }) => {

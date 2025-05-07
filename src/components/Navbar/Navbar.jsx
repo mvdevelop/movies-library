@@ -1,16 +1,17 @@
+
 import React from "react";
 
 import "./Navbar.css";
 import DarkMode from "../DarkMode/DarkMode";
-import Fire from "../../assets/fire.png";
-import Star from "../../assets/glowing-star.png";
-import Party from "../../assets/partying-face.png";
+import Fire from "../../assets/fire-gif.gif";
+import Star from "../../assets/star-gif.gif";
+import Party from "../../assets/happy-gif.gif";
 
 const Navbar = () => {
     return (
         <nav className='navbar'>
-            <h1>MovieManiac</h1>
-
+            <h1>Movies Library</h1>
+            
             <div className='navbar_links'>
                 <DarkMode />
                 <a href='#popular'>
