@@ -7,7 +7,8 @@ const mockMovie: Movie = {
   id: 1,
   title: "Test Movie",
   original_title: "Test Movie",
-  overview: "A test movie overview that is longer than 100 characters to test the slicing functionality of the movie card component rendering.",
+  overview:
+    "A test movie overview that is longer than 100 characters to test the slicing functionality of the movie card component rendering.",
   poster_path: "/test-poster.jpg",
   backdrop_path: "/test-backdrop.jpg",
   release_date: "2024-01-01",
@@ -37,8 +38,7 @@ describe("MovieCard Component", () => {
   it("renders movie overview with truncated text", () => {
     render(<MovieCard movie={mockMovie} />);
     const overviewText = mockMovie.overview.slice(0, 100) + "...";
-    const description = screen.getByText(new RegExp(overviewText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-    expect(description).toBeInTheDocument();
+    expect(screen.getByText(overviewText)).toBeInTheDocument();
   });
 
   it("links to TMDb page with correct URL", () => {
@@ -62,7 +62,6 @@ describe("MovieCard Component", () => {
   it("handles null poster_path gracefully", () => {
     const movieNoPoster = { ...mockMovie, poster_path: null };
     render(<MovieCard movie={movieNoPoster} />);
-    // O star emoji também é uma img, então buscamos especificamente pelo poster
     const posterImg = screen.queryByAltText("Poster de Test Movie");
     expect(posterImg).not.toBeInTheDocument();
   });

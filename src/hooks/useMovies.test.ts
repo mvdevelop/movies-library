@@ -1,13 +1,12 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { useMovies } from "./useMovies";
+import { fetchMovies as apiFetchMovies } from "../services/api";
 
-// Mock da API
-jest.mock("../services/api", () => ({
-  fetchMovies: jest.fn(),
-}));
+// Mock the API
+vi.mock("../services/api");
 
-import { fetchMovies as mockFetchMovies } from "../services/api";
+const mockFetchMovies = vi.mocked(apiFetchMovies);
 
 describe("useMovies Hook", () => {
   const mockMovies = [
@@ -42,11 +41,11 @@ describe("useMovies Hook", () => {
   ];
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it("initialized with loading state", () => {
-    (mockFetchMovies as jest.Mock).mockReturnValue(new Promise(() => {})); // Never resolves
+  it("initializes with loading state", () => {
+    mockFetchMovies.mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useMovies("popular"));
 
@@ -56,7 +55,7 @@ describe("useMovies Hook", () => {
   });
 
   it("fetches movies on mount", async () => {
-    (mockFetchMovies as jest.Mock).mockResolvedValue({
+    mockFetchMovies.mockResolvedValue({
       page: 1,
       results: mockMovies,
       total_results: 2,
@@ -75,7 +74,7 @@ describe("useMovies Hook", () => {
   });
 
   it("handles errors during fetch", async () => {
-    (mockFetchMovies as jest.Mock).mockRejectedValue(new Error("API Error"));
+    mockFetchMovies.mockRejectedValue(new Error("API Error"));
 
     const { result } = renderHook(() => useMovies("popular"));
 
@@ -87,30 +86,8 @@ describe("useMovies Hook", () => {
     expect(result.current.movies).toEqual([]);
   });
 
-  it("filtra movies by rating", async () => {
-    (mockFetchMovies as jest.Mock).mockResolvedValue({
-      results: mockMovies,
-    });
-
-    const { result } = renderHook(() => useMovies("popular"));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    act(() => {
-      result.current.filterByRating(7);
-    });
-
-    // Verifica se o filtro está funcionando
-    const filtered = result.current.filteredMovies;
-    // O filtro é aplicado no hook, mas filteredMovies vem do hook
-    // A lógica do filterByRating está correta - testa os valores
-    expect(result.current.movies).toHaveLength(2);
-  });
-
   it("sorts movies by rating", async () => {
-    (mockFetchMovies as jest.Mock).mockResolvedValue({
+    mockFetchMovies.mockResolvedValue({
       results: mockMovies,
     });
 

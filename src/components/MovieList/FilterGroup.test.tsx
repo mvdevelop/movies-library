@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 import FilterGroup from "./FilterGroup";
 
 describe("FilterGroup Component", () => {
-  const mockOnRatingClick = jest.fn();
+  const mockOnRatingClick = vi.fn();
   const defaultProps = {
     minRating: 0,
     onRatingClick: mockOnRatingClick,
