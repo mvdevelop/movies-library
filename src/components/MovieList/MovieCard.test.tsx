@@ -36,7 +36,8 @@ describe("MovieCard Component", () => {
 
   it("renders movie overview with truncated text", () => {
     render(<MovieCard movie={mockMovie} />);
-    const description = screen.getByText(/A test movie overview that is longer than 100 characters to test the slicing functionality of the movie card rendering\.\.\./);
+    const overviewText = mockMovie.overview.slice(0, 100) + "...";
+    const description = screen.getByText(new RegExp(overviewText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
     expect(description).toBeInTheDocument();
   });
 
@@ -61,6 +62,8 @@ describe("MovieCard Component", () => {
   it("handles null poster_path gracefully", () => {
     const movieNoPoster = { ...mockMovie, poster_path: null };
     render(<MovieCard movie={movieNoPoster} />);
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    // O star emoji também é uma img, então buscamos especificamente pelo poster
+    const posterImg = screen.queryByAltText("Poster de Test Movie");
+    expect(posterImg).not.toBeInTheDocument();
   });
 });

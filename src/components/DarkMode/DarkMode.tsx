@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 import "./DarkMode.css";
-import { ReactComponent as Sun } from "../../assets/Sun.svg";
-import { ReactComponent as Moon } from "../../assets/Moon.svg";
+import Sun from "../../assets/Sun.svg";
+import Moon from "../../assets/Moon.svg";
 
 const DarkMode = () => {
   const [isDark, setIsDark] = useState<boolean>(
@@ -50,8 +50,8 @@ const DarkMode = () => {
         aria-label="Alternar tema escuro/claro"
       />
       <label className="dark_mode_label" htmlFor="darkmode-toggle">
-        <Sun />
-        <Moon />
+        <img src={Sun} alt="Sun" className="theme_icon" />
+        <img src={Moon} alt="Moon" className="theme_icon" />
       </label>
     </div>
   );
