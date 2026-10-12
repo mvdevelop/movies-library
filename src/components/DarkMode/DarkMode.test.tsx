@@ -1,0 +1,61 @@
+import { render, screen, fireEvent } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import DarkMode from "./DarkMode";
+
+describe("DarkMode Component", () => {
+  beforeEach(() => {
+    // Reset localStorage and body attributes between tests
+    localStorage.clear();
+    document.body.removeAttribute("data-theme");
+  });
+
+  it("renders toggle checkbox", () => {
+    render(<DarkMode />);
+
+    const checkbox = screen.getByRole("checkbox");
+    expect(checkbox).toBeInTheDocument();
+    expect(checkbox).toHaveAttribute("id", "darkmode-toggle");
+  });
+
+  it("has aria-label for accessibility", () => {
+    render(<DarkMode />);
+
+    const checkbox = screen.getByLabelText("Alternar tema escuro/claro");
+    expect(checkbox).toBeInTheDocument();
+  });
+
+  it("sets dark theme by default when no preference exists", () => {
+    render(<DarkMode />);
+
+    expect(document.body.getAttribute("data-theme")).toBe("dark");
+    expect(localStorage.getItem("selectedTheme")).toBe("dark");
+  });
+
+  it("maintains light theme when previously selected", () => {
+    localStorage.setItem("selectedTheme", "light");
+    render(<DarkMode />);
+
+    expect(document.body.getAttribute("data-theme")).toBe("light");
+  });
+
+  it("switches to dark theme when checkbox is checked", () => {
+    localStorage.setItem("selectedTheme", "light");
+    render(<DarkMode />);
+
+    const checkbox = screen.getByRole("checkbox");
+    fireEvent.click(checkbox);
+
+    expect(document.body.getAttribute("data-theme")).toBe("dark");
+    expect(localStorage.getItem("selectedTheme")).toBe("dark");
+  });
+
+  it("switches to light theme when checkbox is unchecked", () => {
+    render(<DarkMode />); // Default dark
+
+    const checkbox = screen.getByRole("checkbox");
+    fireEvent.click(checkbox); // Uncheck = light
+
+    expect(document.body.getAttribute("data-theme")).toBe("light");
+    expect(localStorage.getItem("selectedTheme")).toBe("light");
+  });
+});
