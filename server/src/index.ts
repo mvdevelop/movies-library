@@ -83,10 +83,15 @@ app.get("/api/movies/:type", async (req: Request, res: Response) => {
       return res.status(response.status).json(errorData || { error: "Erro na API TMDb" });
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      page: number;
+      results: Array<Record<string, unknown>>;
+      total_results: number;
+      total_pages: number;
+    };
 
     // Remove campos que não devem expor diretamente ao cliente
-    const sanitizedResults = data.results.map((movie: any) => ({
+    const sanitizedResults = data.results.map((movie: Record<string, unknown>) => ({
       id: movie.id,
       title: movie.title,
       original_title: movie.original_title,
