@@ -12,16 +12,9 @@ describe("DarkMode Component", () => {
   it("renders toggle checkbox", () => {
     render(<DarkMode />);
 
-    const checkbox = screen.getByRole("checkbox");
+    const checkbox = screen.getByLabelText("Alternar tema escuro/claro") as HTMLInputElement;
     expect(checkbox).toBeInTheDocument();
-    expect(checkbox).toHaveAttribute("id", "darkmode-toggle");
-  });
-
-  it("has aria-label for accessibility", () => {
-    render(<DarkMode />);
-
-    const checkbox = screen.getByLabelText("Alternar tema escuro/claro");
-    expect(checkbox).toBeInTheDocument();
+    expect(checkbox.id).toBe("darkmode-toggle");
   });
 
   it("sets dark theme by default when no preference exists", () => {
@@ -42,7 +35,7 @@ describe("DarkMode Component", () => {
     localStorage.setItem("selectedTheme", "light");
     render(<DarkMode />);
 
-    const checkbox = screen.getByRole("checkbox");
+    const checkbox = screen.getByLabelText("Alternar tema escuro/claro") as HTMLInputElement;
     fireEvent.click(checkbox);
 
     expect(document.body.getAttribute("data-theme")).toBe("dark");
@@ -52,7 +45,7 @@ describe("DarkMode Component", () => {
   it("switches to light theme when checkbox is unchecked", () => {
     render(<DarkMode />); // Default dark
 
-    const checkbox = screen.getByRole("checkbox");
+    const checkbox = screen.getByLabelText("Alternar tema escuro/claro") as HTMLInputElement;
     fireEvent.click(checkbox); // Uncheck = light
 
     expect(document.body.getAttribute("data-theme")).toBe("light");
