@@ -24,15 +24,10 @@
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
-    "security/detect-object-with-no-contours": "warn",
     "security/detect-buffer-noassert": "warn",
     "security/detect-child-process": "warn",
-    "security/detect-disable-mustache": "off",
-    "security/detect-non-iterable-concat": "off",
-    "security/detect-non-iterable-regex": "off",
     "security/detect-new-buffer": "warn",
     "security/detect-pseudoRandomBytes": "warn",
-    "security/detect-unsafe-regex-value": "warn",
     "@typescript-eslint/no-unused-vars": [
       "error",
       { "argsIgnorePattern": "^_" }

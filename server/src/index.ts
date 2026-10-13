@@ -59,11 +59,11 @@ app.use("/api/", limiter);
 // Rotas da API TMDb
 app.get("/api/movies/:type", async (req: Request, res: Response) => {
   try {
-    const { type } = req.params;
+    const type = req.params.type as string;
 
     // Validação do tipo de lista de filmes
-    const validTypes = ["popular", "top_rated", "upcoming"];
-    if (!validTypes.includes(type)) {
+    const validTypes = ["popular", "top_rated", "upcoming"] as const;
+    if (!validTypes.includes(type as (typeof validTypes)[number])) {
       return res.status(400).json({ error: "Tipo de filme inválido" });
     }
 
