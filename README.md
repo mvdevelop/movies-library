@@ -1,96 +1,209 @@
+# 🎬 Movies Library
 
-Movies Library 🎬
+A modern React + TypeScript application for browsing popular, top-rated, and upcoming movies from The Movie Database (TMDb), with a secure backend proxy, comprehensive testing, and CI/CD pipeline.
 
-Movies Library is a ReactJS application built with Vite that allows users to browse, search, and view information about movies in a clean and interactive interface.
+## 🔒 Security Status
 
-💡 Features
+- ✅ **API Key Protection**: TMDb API key stored server-side via Express proxy
+- ✅ **Security Headers**: CSP, HSTS, X-Frame-Options, X-Content-Type-Options via Helmet
+- ✅ **Rate Limiting**: 100 requests/15min per IP
+- ✅ **Input Validation**: Zod schemas for API responses
+- ✅ **Dependency Scanning**: 0 high/critical vulnerabilities
+- ✅ **CI/CD Security**: CodeQL SAST, npm audit
 
-Browse a catalog of movies with posters, titles, and descriptions.
+## 🚀 Features
 
-Search movies by title.
+- **Browse Movies**: Popular, Top Rated, and Upcoming movies
+- **Dark/Light Mode**: Theme toggle with system preference support
+- **Filtering**: Filter by minimum rating (6+, 7+, 8+)
+- **Sorting**: Sort by release date or rating (ascending/descending)
+- **Responsive Design**: Mobile-first responsive layout
+- **Performance**: Lazy loading images, optimized builds
 
-View detailed information about each movie.
+## 🛠️ Tech Stack
 
-Responsive layout for desktop, tablet, and mobile.
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18 + TypeScript |
+| Bundler | Vite 6 |
+| Backend | Node.js + Express |
+| Testing | Vitest + React Testing Library |
+| Linting | ESLint + Prettier + Security Plugin |
+| CI/CD | GitHub Actions + CodeQL |
+| Deployment | GitHub Pages (frontend) |
 
-Smooth navigation with React Router.
+## 📦 Installation
 
-🛠️ Technologies Used
+### Prerequisites
+- Node.js >= 20
+- npm or yarn
 
-React 18
+### Development Setup
 
-Vite (fast and modern bundler)
-
-React Router for page navigation
-
-CSS/SCSS for styling
-
-Optional: Integration with movie APIs (e.g., TMDb) for dynamic content
-
-⚡ Installation
-
-Follow these steps to run the project locally:
-
-Clone the repository:
-
-git clone https://github.com/your-username/movies-library.git
+```bash
+# Clone the repository
+git clone https://github.com/mvdevelop/movies-library.git
 cd movies-library
 
-
-Install dependencies:
-
+# Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env
+# Add your TMDb API key to .env
 
-Start the development server:
+# Start the backend proxy
+npm run server:dev
 
+# Start the frontend (in another terminal)
 npm run dev
 
+# Run tests
+npm run test:run
 
-Open the application in your browser:
+# Run linter
+npm run lint
 
-The terminal will display:
+# Type checking
+npm run type-check
+```
 
-Local:   http://localhost:5173/
+### Environment Variables
 
+**Frontend (`.env`)**:
+```
+VITE_TMDB_API_KEY=your_tmdb_api_key_here
+```
 
-Open this link to use the Movies Library app.
+**Backend (`server/.env`)**:
+```
+TMDB_API_KEY=your_tmdb_api_key_here
+PORT=3001
+NODE_ENV=development
+```
 
-📂 Project Structure
+> 🔐 **Never commit `.env` files to version control**. See `.gitignore`.
+
+## 🏗️ Architecture
+
+```
 movies-library/
-│
-├─ public/           # Static assets (images, icons, favicon)
-├─ src/
-│   ├─ components/   # Reusable React components (MovieCard, SearchBar, Navbar)
-│   ├─ pages/        # Pages (Home, MovieDetails, Favorites)
-│   ├─ data/         # Optional static movie data
-│   ├─ App.jsx       # Main React component
-│   └─ main.jsx      # Vite entry point
-├─ package.json
-├─ vite.config.js
-└─ README.md
+├── src/
+│   ├── App.tsx          # App entry component
+│   ├── main.tsx         # ReactDOM entry
+│   ├── index.css        # Global styles
+│   ├── assets/          # Images, fonts, icons
+│   ├── components/      # Reusable UI components
+│   │   ├── Navbar/      # Navigation
+│   │   ├── DarkMode/    # Theme toggle
+│   │   └── MovieList/   # Movie display components
+│   ├── hooks/           # Custom React hooks
+│   │   └── useMovies.ts # Movie fetching + state
+│   ├── services/        # API service layer
+│   │   └── api.ts       # TMDb API client
+│   ├── types/           # Shared TypeScript interfaces
+│   │   └── index.ts     # Movie, API response types
+│   └── *.test.tsx       # Unit tests (20 tests, 100% pass)
+├── server/              # Backend proxy server
+│   ├── src/
+│   │   ├── index.ts     # Express server with Helmet, CORS, rate limiting
+│   │   └── types/       # Server-side types
+│   └── .env.example
+├── .github/
+│   └── workflows/
+│       └── ci.yml       # CI/CD pipeline (lint, test, build, CodeQL)
+├── vite.config.ts       # Vite config with security headers
+├── tsconfig.json        # TypeScript config
+├── vitest.config.ts     # Vitest config
+└── .eslintrc.json       # ESLint with security plugins
+```
 
-🎨 Customization
+### Data Flow
 
-Add new movies by updating src/data/movies.json or integrating an API.
+```
+┌─────────────────────────────────────────────────┐
+│                  React Frontend                  │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐  │
+│  │ MovieList│    │ useMovies│    │   API    │  │
+│  │ Component│───▶│    Hook   │───▶│  Service  │  │
+│  └──────────┘    └──────────┘    └──────────┘  │
+└──────────────────────┬─────────────────────────┘
+                       │
+                       │ fetch("/api/movies/...")
+                       │
+┌──────────────────────┴─────────────────────────┐
+│                Express Backend                 │
+│  ┌─────────┐  ┌──────────┐  ┌──────────┐  ┌── │
+│  │ Helmet  │  │ RateLimiter│  │  CORS    │  │  │
+│  └─────────┘  └──────────┘  └──────────┘  │  │
+│  ┌──────────────────────────────────────┐  │  │
+│  │      TMDb Proxy (API Key Hidden)   │  │  │
+│  └──────────────────────────────────────┘  │  │
+│  ┌──────────────────────────────────────┐  │  │
+│  │         TMDb API (api.themoviedb)   │  │  │
+│  └──────────────────────────────────────┘  └──│
+└─────────────────────────────────────────────────┘
+```
 
-Change styling in CSS/SCSS files located in src/components or src/pages.
+## 🧪 Testing
 
-Customize layout, colors, or movie card designs easily.
+```bash
+# Run all tests
+npm run test:run
 
-⚙️ Production Build
+# Run tests in watch mode
+npm run test
 
-To create an optimized build for deployment:
+# Generate coverage report
+npm run test:coverage
+```
 
-npm run build
+## 🔍 Security Measures
 
+| Concern | Mitigation |
+|---------|-----------|
+| API Key Exposure | Server-side proxy keeps key hidden |
+| XSS | CSP headers, input sanitization |
+| CSRF | CORS policy, same-origin requests |
+| Rate Limiting | express-rate-limit (100 req/15min) |
+| Security Headers | Helmet (CSP, HSTS, X-Frame-Options) |
+| Dependency Scanning | npm audit + CodeQL in CI |
+| Type Safety | TypeScript + Zod for API validation |
 
-The output will be in the dist/ folder, ready to deploy on GitHub Pages, Netlify, Vercel, or any static hosting service.
+## 🔄 Development Workflow
 
-📌 Notes
+1. **Start backend**: `npm run server:dev`
+2. **Start frontend**: `npm run dev`
+3. **Run tests**: `npm run test:run`
+4. **Lint**: `npm run lint`
+5. **Build**: `npm run build`
+6. **Format**: `npm run format`
 
-Built with React + Vite for high performance and fast development.
+## 📊 CI/CD Pipeline
 
-Fully responsive, optimized for mobile, tablet, and desktop.
+The CI pipeline runs on every push to `main`:
+- **Lint & Type Check**
+- **Unit Tests** (Vitest)
+- **Security Scan** (npm audit)
+- **CodeQL SAST** (Static Analysis)
+- **Build Verification**
 
-Easy to extend with new features like favorites, ratings, or API integration.
+See `.github/workflows/ci.yml` for details.
+
+## 📜 Licenses
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/xxx`)
+3. Make your changes
+4. Run tests: `npm run test:run`
+5. Run lint: `npm run lint`
+6. Commit and push
+
+## 📞 Contact
+
+- **Author**: Marco V. (MvDevelop)
+- **Portfolio**: [github.com/mvdevelop](https://github.com/mvdevelop)

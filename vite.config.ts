@@ -17,4 +17,16 @@ export default defineConfig({
       },
     },
   },
+  // Headers de segurança (CSP, X-Frame-Options, etc.)
+  // Para produção (GitHub Pages), usar um plugin ou configurar no backend
+  // Aqui definimos headers seguros para desenvolvimento
+  preview: {
+    headers: {
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "X-XSS-Protection": "1; mode=block",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    },
+  },
 });

@@ -13,14 +13,12 @@
       "jsx": true
     }
   },
-  "plugins": ["@typescript-eslint", "react", "react-hooks", "react-refresh", "security"],
+  "plugins": ["@typescript-eslint", "react", "react-hooks", "react-refresh", "security", "prettier"],
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
     "plugin:@typescript-eslint/recommended",
-    "plugin:security/recommended",
-    "plugin:react-refresh/only-export-components",
     "prettier"
   ],
   "rules": {
@@ -39,12 +37,13 @@
       "error",
       { "argsIgnorePattern": "^_" }
     ],
-    "@typescript-eslint/no-explicit-any": "warn"
+    "@typescript-eslint/no-explicit-any": "warn",
+    "prettier/prettier": "error"
   },
   "settings": {
     "react": {
       "version": "18.3"
     }
   },
-  "ignorePatterns": ["dist", "node_modules", "server/dist", "*.config.js", "*.config.ts"]
+  "ignorePatterns": ["dist", "node_modules", "server/dist", "*.config.js", "*.config.ts", "*.config.cjs"]
 }
