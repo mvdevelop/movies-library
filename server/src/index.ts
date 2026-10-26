@@ -5,7 +5,7 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
-import { z } from "zod";
+import { registerSchema, loginSchema, movieIdSchema } from "./schemas";
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -34,9 +34,10 @@ const requireUser = async (req: Request, res: Response) => {
 };
 
 app.post("/api/auth/register", async (req: Request, res: Response) => {
-  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
-  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  const parsed = registerSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Nome, email e senha válidos são obrigatórios" });
+  const { name, password } = parsed.data;
+  const email = parsed.data.email.toLowerCase();
   if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) return res.status(400).json({ error: "Nome, email e senha válidos são obrigatórios" });
   const existing = await mockRequest(`/users?email=${encodeURIComponent(email)}`);
   if ((await existing.json()).length) return res.status(409).json({ error: "Não foi possível criar a conta" });
@@ -47,8 +48,10 @@ app.post("/api/auth/register", async (req: Request, res: Response) => {
 });
 
 app.post("/api/auth/login", async (req: Request, res: Response) => {
-  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
-  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  const parsed = loginSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Email ou senha inválidos" });
+  const email = parsed.data.email.toLowerCase();
+  const password = parsed.data.password;
   const response = await mockRequest(`/users?email=${encodeURIComponent(email)}`);
   const users = response.ok ? await response.json() as MockUser[] : [];
   const user = users[0];
@@ -76,7 +79,8 @@ app.get("/api/me/favorites", async (req: Request, res: Response) => {
 
 app.post("/api/me/favorites", async (req: Request, res: Response) => {
   const user = await requireUser(req, res); if (!user) return;
-  const movieId = Number(req.body?.movieId); if (!Number.isInteger(movieId) || movieId < 1) return res.status(400).json({ error: "Filme inválido" });
+  const parsed = movieIdSchema.safeParse(req.body); if (!parsed.success) return res.status(400).json({ error: "Filme inválido" });
+  const movieId = parsed.data.movieId; if (!Number.isInteger(movieId) || movieId < 1) return res.status(400).json({ error: "Filme inválido" });
   const existing = await mockRequest(`/favorites?userId=${user.id}&movieId=${movieId}`);
   const existingFavorites = await existing.json() as unknown[];
   if (existingFavorites.length) return res.status(200).json(existingFavorites[0]);
@@ -97,7 +101,8 @@ app.get("/api/me/history", async (req: Request, res: Response) => {
 
 app.post("/api/me/history", async (req: Request, res: Response) => {
   const user = await requireUser(req, res); if (!user) return;
-  const movieId = Number(req.body?.movieId); if (!Number.isInteger(movieId) || movieId < 1) return res.status(400).json({ error: "Filme inválido" });
+  const parsed = movieIdSchema.safeParse(req.body); if (!parsed.success) return res.status(400).json({ error: "Filme inválido" });
+  const movieId = parsed.data.movieId; if (!Number.isInteger(movieId) || movieId < 1) return res.status(400).json({ error: "Filme inválido" });
   const response = await mockRequest("/watchHistory", { method: "POST", body: JSON.stringify({ id: crypto.randomUUID(), userId: user.id, movieId, watchedAt: new Date().toISOString() }) }); return res.status(201).json(await response.json());
 });
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
