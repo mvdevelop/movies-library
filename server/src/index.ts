@@ -3,6 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 
 // Carrega variáveis de ambiente
 dotenv.config();
@@ -57,6 +59,54 @@ const limiter = rateLimit({
 app.use("/api/", limiter);
 
 // Rotas da API TMDb
+const TMDB_BASE_URL = "https://api.themoviedb.org/3";
+
+const fetchTmdb = async (path: string, init?: RequestInit) => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) throw new Error("TMDB_API_KEY não configurada");
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const separator = path.includes("?") ? "&" : "?";
+    return await fetch(`${TMDB_BASE_URL}${path}${separator}api_key=${encodeURIComponent(apiKey)}&language=pt-BR`, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+app.get("/api/movies/search", async (req: Request, res: Response) => {
+  const query = typeof req.query.query === "string" ? req.query.query.trim() : "";
+  const page = typeof req.query.page === "string" ? Number(req.query.page) : 1;
+  if (!query || !Number.isInteger(page) || page < 1 || page > 500) {
+    return res.status(400).json({ error: "Informe uma busca e uma página válida" });
+  }
+  try {
+    const response = await fetchTmdb(`/search/movie?query=${encodeURIComponent(query)}&page=${page}`);
+    const data = await response.json().catch(() => null);
+    if (!response.ok) return res.status(response.status).json({ error: "Erro na API TMDb" });
+    return res.json(data);
+  } catch {
+    return res.status(502).json({ error: "Não foi possível consultar o catálogo" });
+  }
+});
+
+app.get("/api/movies/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: "ID de filme inválido" });
+  try {
+    const response = await fetchTmdb(`/movie/${id}?append_to_response=credits,videos,recommendations`);
+    const data = await response.json().catch(() => null);
+    if (!response.ok) return res.status(response.status).json({ error: "Filme não encontrado" });
+    return res.json(data);
+  } catch {
+    return res.status(502).json({ error: "Não foi possível consultar o catálogo" });
+  }
+});
+
 app.get("/api/movies/:type", async (req: Request, res: Response) => {
   try {
     const type = req.params.type as string;

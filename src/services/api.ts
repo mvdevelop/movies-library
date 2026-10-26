@@ -1,4 +1,4 @@
-import type { MovieApiResponse, MovieType } from "../types";
+import type { Movie, MovieApiResponse, MovieType } from "../types";
 
 /**
  * Serviço para consumo da API de filmes via proxy backend
@@ -23,18 +23,29 @@ const API_BASE_URL =
 /**
  * Busca filmes de uma categoria específica
  */
+const fetchApi = async <T>(path: string): Promise<T> => {
+  const response = await fetch(`${API_BASE_URL}${path}`);
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data?.error || `Erro na API: ${response.status}`);
+  return data as T;
+};
+
 export const fetchMovies = async (
   type: MovieType
 ): Promise<MovieApiResponse> => {
-  const response = await fetch(`${API_BASE_URL}/movies/${type}`);
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => null);
-    throw new Error(
-      error?.message || `Erro ao buscar filmes: ${response.status}`
-    );
-  }
-
-  const data: MovieApiResponse = await response.json();
-  return data;
+  return fetchApi<MovieApiResponse>(`/movies/${type}`);
 };
+
+export const searchMovies = async (
+  query: string,
+  page = 1
+): Promise<MovieApiResponse> => {
+  return fetchApi<MovieApiResponse>(
+    `/movies/search?query=${encodeURIComponent(query)}&page=${page}`
+  );
+};
+
+export const fetchMovieDetails = async (id: number): Promise<Movie> => {
+  return fetchApi<Movie>(`/movies/${id}`);
+};
+
