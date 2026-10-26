@@ -1,4 +1,4 @@
-import type { Movie, MovieApiResponse, MovieType } from "../types";
+import type { Movie, MovieApiResponse, MovieDetails, MovieType } from "../types";
 
 /**
  * Serviço para consumo da API de filmes via proxy backend
@@ -45,7 +45,7 @@ export const searchMovies = async (
   );
 };
 
-export const fetchMovieDetails = async (id: number): Promise<Movie> => {
+export const fetchMovieDetails = async (id: number): Promise<MovieDetails> => {
   return fetchApi<Movie>(`/movies/${id}`);
 };
 

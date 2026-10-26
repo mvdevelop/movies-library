@@ -5,6 +5,7 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
+import { z } from "zod";
 
 // Carrega variáveis de ambiente
 dotenv.config();

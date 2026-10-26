@@ -24,6 +24,28 @@ export interface MovieApiResponse {
   total_pages: number;
 }
 
+export interface MovieVideo {
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+}
+
+export interface MovieCredit {
+  id: number;
+  name: string;
+  character?: string;
+  profile_path: string | null;
+}
+
+export interface MovieDetails extends Movie {
+  runtime?: number;
+  genres?: Array<{ id: number; name: string }>;
+  credits?: { cast: MovieCredit[] };
+  videos?: { results: MovieVideo[] };
+  recommendations?: MovieApiResponse;
+}
+
 export type MovieType = "popular" | "top_rated" | "upcoming";
 
 export interface SortConfig {

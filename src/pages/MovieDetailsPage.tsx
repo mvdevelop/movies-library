@@ -1,14 +1,14 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchMovieDetails } from "../services/api";
-import type { Movie } from "../types";
+import type { MovieDetails } from "../types";
 import { addFavorite, addHistory, getFavorites, removeFavorite } from "../services/auth";
 import { useAuth } from "../contexts/AuthContext";
 
 const MovieDetailsPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const [movie, setMovie] = useState<Movie | null>(null);
+  const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [favorite, setFavorite] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,12 @@ const MovieDetailsPage = () => {
       <h2>{movie.title}</h2>
       <p>{movie.release_date || "Data não disponível"} · Nota {movie.vote_average.toFixed(1)}</p>
       <p>{movie.overview || "Sinopse não disponível."}</p>
+      {movie.genres && <p>{movie.genres.map((genre) => genre.name).join(" · ")}</p>}
+      {movie.runtime && <p>{movie.runtime} minutos</p>}
+      {movie.videos?.results.find((video) => video.site === "YouTube" && video.type === "Trailer") && <a href={`https://www.youtube.com/watch?v=${movie.videos.results.find((video) => video.site === "YouTube" && video.type === "Trailer")?.key}`} target="_blank" rel="noreferrer">Assistir trailer</a>}
       {user ? <button onClick={toggleFavorite}>{favorite ? "Remover da minha lista" : "Adicionar à minha lista"}</button> : <p><Link to="/login">Entre para salvar este filme</Link></p>}
+      {movie.credits?.cast?.length ? <section><h3>Elenco</h3><ul>{movie.credits.cast.slice(0, 8).map((person) => <li key={person.id}>{person.name}{person.character ? ` — ${person.character}` : ""}</li>)}</ul></section> : null}
+      {movie.recommendations?.results?.length ? <section><h3>Recomendações</h3><div className="movie_cards">{movie.recommendations.results.slice(0, 6).map((recommendation) => <Link key={recommendation.id} to={`/movies/${recommendation.id}`} className="movie_card"><span>{recommendation.title}</span></Link>)}</div></section> : null}
       {actionError && <p role="alert">{actionError}</p>}
       <Link to="/">Voltar ao catálogo</Link>
     </main>
