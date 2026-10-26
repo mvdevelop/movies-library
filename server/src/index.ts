@@ -10,6 +10,95 @@ import crypto from "node:crypto";
 dotenv.config();
 
 const app = express();
+const MOCK_API_URL = process.env.MOCK_API_URL || "http://localhost:3002";
+const sessions = new Map<string, { userId: string; expiresAt: number }>();
+
+type MockUser = { id: string; name: string; email: string; passwordHash: string };
+const mockRequest = async (path: string, init?: RequestInit) => fetch(`${MOCK_API_URL}${path}`, {
+  ...init,
+  headers: { "Content-Type": "application/json", ...(init?.headers || {}) },
+});
+const publicUser = ({ passwordHash: _passwordHash, ...user }: MockUser) => user; // Nunca devolve o hash.
+const getSessionUser = async (req: Request) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  const session = token ? sessions.get(token) : undefined;
+  if (!session || session.expiresAt < Date.now()) return null;
+  const response = await mockRequest(`/users/${session.userId}`);
+  return response.ok ? (await response.json() as MockUser) : null;
+};
+const requireUser = async (req: Request, res: Response) => {
+  const user = await getSessionUser(req);
+  if (!user) { res.status(401).json({ error: "Autenticação necessária" }); return null; }
+  return user;
+};
+
+app.post("/api/auth/register", async (req: Request, res: Response) => {
+  const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) return res.status(400).json({ error: "Nome, email e senha válidos são obrigatórios" });
+  const existing = await mockRequest(`/users?email=${encodeURIComponent(email)}`);
+  if ((await existing.json()).length) return res.status(409).json({ error: "Não foi possível criar a conta" });
+  const user: MockUser = { id: crypto.randomUUID(), name, email, passwordHash: await bcrypt.hash(password, 12) };
+  const created = await mockRequest("/users", { method: "POST", body: JSON.stringify(user) });
+  if (!created.ok) return res.status(502).json({ error: "Persistência indisponível" });
+  return res.status(201).json({ user: publicUser(user) });
+});
+
+app.post("/api/auth/login", async (req: Request, res: Response) => {
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const password = typeof req.body?.password === "string" ? req.body.password : "";
+  const response = await mockRequest(`/users?email=${encodeURIComponent(email)}`);
+  const users = response.ok ? await response.json() as MockUser[] : [];
+  const user = users[0];
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) return res.status(401).json({ error: "Email ou senha inválidos" });
+  const token = crypto.randomBytes(32).toString("hex");
+  sessions.set(token, { userId: user.id, expiresAt: Date.now() + 86_400_000 });
+  return res.json({ token, user: publicUser(user) });
+});
+
+app.post("/api/auth/logout", async (req: Request, res: Response) => {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (token) sessions.delete(token);
+  return res.status(204).send();
+});
+
+app.get("/api/auth/me", async (req: Request, res: Response) => {
+  const user = await getSessionUser(req);
+  return user ? res.json({ user: publicUser(user) }) : res.status(401).json({ error: "Sessão inválida" });
+});
+
+app.get("/api/me/favorites", async (req: Request, res: Response) => {
+  const user = await requireUser(req, res); if (!user) return;
+  const response = await mockRequest(`/favorites?userId=${user.id}`); return res.json(await response.json());
+});
+
+app.post("/api/me/favorites", async (req: Request, res: Response) => {
+  const user = await requireUser(req, res); if (!user) return;
+  const movieId = Number(req.body?.movieId); if (!Number.isInteger(movieId) || movieId < 1) return res.status(400).json({ error: "Filme inválido" });
+  const existing = await mockRequest(`/favorites?userId=${user.id}&movieId=${movieId}`);
+  const existingFavorites = await existing.json() as unknown[];
+  if (existingFavorites.length) return res.status(200).json(existingFavorites[0]);
+  const response = await mockRequest("/favorites", { method: "POST", body: JSON.stringify({ id: crypto.randomUUID(), userId: user.id, movieId, addedAt: new Date().toISOString() }) });
+  return res.status(201).json(await response.json());
+});
+
+app.delete("/api/me/favorites/:movieId", async (req: Request, res: Response) => {
+  const user = await requireUser(req, res); if (!user) return;
+  const response = await mockRequest(`/favorites?userId=${user.id}&movieId=${Number(req.params.movieId)}`); const favorites = await response.json() as Array<{ id: string }>;
+  await Promise.all(favorites.map((favorite) => mockRequest(`/favorites/${favorite.id}`, { method: "DELETE" }))); return res.status(204).send();
+});
+
+app.get("/api/me/history", async (req: Request, res: Response) => {
+  const user = await requireUser(req, res); if (!user) return;
+  const response = await mockRequest(`/watchHistory?userId=${user.id}`); return res.json(await response.json());
+});
+
+app.post("/api/me/history", async (req: Request, res: Response) => {
+  const user = await requireUser(req, res); if (!user) return;
+  const movieId = Number(req.body?.movieId); if (!Number.isInteger(movieId) || movieId < 1) return res.status(400).json({ error: "Filme inválido" });
+  const response = await mockRequest("/watchHistory", { method: "POST", body: JSON.stringify({ id: crypto.randomUUID(), userId: user.id, movieId, watchedAt: new Date().toISOString() }) }); return res.status(201).json(await response.json());
+});
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
 
 // Middlewares de segurança
